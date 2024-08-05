@@ -15,6 +15,9 @@ class Retriever:
     def __init__(self):
         pass
 
+    def embed_and_store_corpus(self, corpus_path):
+        pass
+
     def search(query: str, k: int) -> List[Result]:
         pass
 ```
