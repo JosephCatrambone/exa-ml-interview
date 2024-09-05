@@ -27,7 +27,7 @@ After the interview, I will call search() on 1000 queries from the MS-Marco test
 You are welcome to use any approach you want for this problem -- it will likely involve a transformer-backed bi-encoder at some level, but are welcome to use any architecture or other system to improve the performance. You do have the following constraints:
 
 1. search must return a result in <1 second (95% of the time)
-2. You will have access to a single 80GB A100 to do all the training on
+2. You will have access to a 4 A10G's.
 3. You are welcome to used pretrained LLMs in any capacity here, but you can't start with a pretrained embedding-specific model
 4. You should only train on the [MS-Marco](https://huggingface.co/datasets/mteb/msmarco-v2/viewer/queries) train set -- or any synthetic data you generate
 
