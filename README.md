@@ -2,7 +2,7 @@
 
 This is the starter repo for the onsite Exa ML interview! You will fork this and work on it yourself.
 
-Your goal is to train a model/system for document retrieval over the [MS Marco](https://huggingface.co/datasets/mteb/msmarco-v2/viewer/queries) dataset. In particular, at the end of this you will implement a class `Retriever`
+Your goal is to train a model/system for document retrieval over the [MS Marco V1]([https://huggingface.co/datasets/mteb/msmarco-v2/viewer/queries](https://huggingface.co/datasets/mteb/msmarco)) dataset. In particular, at the end of this you will implement a class `Retriever`
 
 ```python
 @dataclass
