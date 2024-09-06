@@ -7,6 +7,7 @@ import torch.nn
 from datasets import load_dataset  # NOTE: NOT THE HF DATASETS!
 from tqdm import tqdm
 
+from data import load_train_data
 from models import BertFinetunedBiencoder
 
 try:
@@ -48,13 +49,7 @@ def train():
 
     # Load and preprocess data.
     print("Preprocessing data...")
-    #corpus = load_dataset("mteb/msmarco", "corpus")['corpus']
-    #queries = load_dataset("mteb/msmarco", "queries")['queries']
-    #query_corpus_matches = {int(qcm['query-id']): int(qcm['corpus-id']) for qcm in load_dataset("mteb/msmarco", "default")['train']}
-    corpus_id_to_text = {q['_id']: q['text'] for q in tqdm(load_dataset("mteb/msmarco", "corpus", split="corpus"))}
-    query_id_to_text = {q['_id']: q['text'] for q in tqdm(load_dataset("mteb/msmarco", "queries", split="queries"))}
-    query_corpus_matches = load_dataset("mteb/msmarco", "default", split='train')
-    qcm_train, qcm_validate, _ = torch.utils.data.random_split(query_corpus_matches, [0.01, 0.3, 0.69], generator=fixed_generator)
+    corpus_id_to_text, query_id_to_text, qcm_train, qcm_validate = load_train_data(0.01, 0.3, seed=42)
     qcm_train = torch.utils.data.DataLoader(qcm_train, batch_size=run_details.batch_size, shuffle=True)
     qcm_validate = torch.utils.data.DataLoader(qcm_validate, batch_size=run_details.batch_size, shuffle=True)
 
@@ -66,16 +61,19 @@ def train():
         total_epoch_loss = 0.0
         for batch_idx, batch in enumerate(qcm_train):
             optimizer.zero_grad()
-            # {'query-id': ['444373', '254100', '155997', '855750'], 'corpus-id': ['6980776', '5546395', '5974051', '3258342'], 'score': tensor([1., 1., 1., 1.], dtype=torch.float64)}
+
+            # Basic and easy, but not performant because all scores are '1' in training.
+            query_texts = [query_id_to_text[b] for b in batch['query-id']]
+            corpus_texts = [corpus_id_to_text[b] for b in batch['corpus-id']]
+            scores = batch['score']
 
             # Hack for contrastive loss:
             # We take the query and corpus texts in order, then duplicate the query texts and offset the corpus texts by one.
-            query_texts = [query_id_to_text[b] for b in itertools.chain(batch['query-id'], batch['query-id'])]
-            corpus_texts = [corpus_id_to_text[b] for b in itertools.chain(batch['corpus-id'], reversed(batch['corpus-id']))]
-            # batch['score'] is all ones for the train set
-            target_cosine_similarity = torch.Tensor([1] * len(batch) + [0]*len(batch)).to(device)
+            # query_texts = [query_id_to_text[b] for b in itertools.chain(batch['query-id'], batch['query-id'])]
+            # corpus_texts = [corpus_id_to_text[b] for b in itertools.chain(batch['corpus-id'], reversed(batch['corpus-id']))]
+            # target_cosine_similarity = torch.Tensor([1] * len(batch) + [0]*len(batch)).to(device)
 
-            batch_loss = model.infer_training_batch(query_texts, corpus_texts, target_cosine_similarity, loss_fn)
+            batch_loss = model.infer_training_batch(query_texts, corpus_texts, scores, loss_fn)
             batch_loss.backward()
             total_epoch_loss += batch_loss.item()
             optimizer.step()
@@ -94,8 +92,8 @@ def train():
                 print(f"Batch idx: {batch_idx} - Loss: {batch_loss.item()}")
 
             # TODO: Run our validation here.
-    model.doc_encoder.save("./doc_encoder")
-    model.query_encoder.save("./query_encoder")
+    torch.save(model.doc_encoder, "./doc_encoder")
+    torch.save(model.query_encoder, "./query_encoder")
 
 
 if __name__ == "__main__":
