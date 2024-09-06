@@ -23,8 +23,8 @@ class Result:
 
 
 class Retriever:
-    def __init__(self, biencoder: BaseModelMixin):
-        self.model = biencoder
+    def __init__(self, model: BaseModelMixin):
+        self.model = model
         self.id_vec_tuples = list()
         self.doc_id_to_text = dict()
         self.restore()
@@ -57,7 +57,7 @@ class Retriever:
             text = entry['text']
             # TODO: Should we separate embeddings?
             start_compute = time.time()
-            doc_vec = self.model.embed_document(text)
+            doc_vec = self.model.embed_documents(text)
             end_compute = time.time()
 
             start_insert = time.time()
@@ -77,7 +77,7 @@ class Retriever:
 
     def search(self, query: str, k: int) -> list[Result]:
         start_embed = time.time()
-        query_vec = self.model.embed_query(query)
+        query_vec = self.model.embed_queries(query)
         end_embed = time.time()
 
         start_search = time.time()
@@ -128,7 +128,7 @@ class RetrieverSQLite:
             text = entry['text']
             # TODO: Should we separate embeddings?
             start_compute = time.time()
-            doc_vec = self.model.embed_document(text)
+            doc_vec = self.model.embed_documents(text)
             end_compute = time.time()
             start_insert = time.time()
             self.db.execute(
@@ -146,7 +146,7 @@ class RetrieverSQLite:
 
     def search(self, query: str, k: int) -> list[Result]:
         embed_start = time.time()
-        query_vec = self.model.embed_query(query)
+        query_vec = self.model.embed_queries(query)
         embed_end = time.time()
 
         search_start = time.time()

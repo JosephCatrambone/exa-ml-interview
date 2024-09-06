@@ -25,9 +25,8 @@ class BartBase(BaseModelMixin):
     def get_embedding_size(self) -> int:
         return self.base_size
 
-    def embed(self, text: str) -> numpy.ndarray:
+    def embed(self, text: list[str]) -> numpy.ndarray:
         inputs = self.tokenizer(text, return_tensors="pt").to(self.device)
         #encoded = self.base_model(**inputs).last_hidden_state[0, -1, :].detach().numpy()
-        encoded = self.base_model(**inputs).encoder_last_hidden_state[0, -1, :].detach().cpu().numpy()
-        embedding = encoded
-        return embedding
+        encoded = self.base_model(**inputs).encoder_last_hidden_state[:, -1, :].detach().cpu().numpy()
+        return encoded

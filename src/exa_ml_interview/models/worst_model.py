@@ -11,5 +11,5 @@ class WorstModel(BaseModelMixin):
     def get_embedding_size(self) -> int:
         return 4
 
-    def embed(self, text: str) -> numpy.ndarray:
-        return numpy.asarray([0.0, 0.0, 0.0, 1.0/(1+len(text))])
+    def embed(self, docs: list[str]) -> numpy.ndarray:
+        return numpy.asarray([[0.0, 0.0, 0.0, 1.0/(1+len(doc))] for doc in docs])
