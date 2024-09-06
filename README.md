@@ -1,3 +1,42 @@
+# Retrospective
+
+## What was finished:
+
+- train_reviewer will, as per the name, start to train a biencoder (based on bert cased) using the mteb/msmarco dataset.
+- retriever will index and fetch docs when provided with a model.
+- evaluate_retriever will try and run the top-k on the test set. 
+
+## What remains to do:
+
+- Cosine similarity training can overfit but doesn't give good results.  Validation flat, but can overfit on a single example.  Same with contrastive learning.
+- Need to check logic on the evaluate top-k.  
+- Three models still training.
+
+# Model things attempted:
+
+- 'The dumb thing' -- just a plain untrained set of bert embeddings for a baseline.
+- 'Monoencoder' with a single encoder for query and document.
+- Cosine Similarity loss on cased bert embeddings.
+- Contrastive loss on cased bert.  (This did not work as well as I'd like.)
+- (Also tried pre-trained embed model for sanity on the retrieval and scoring system -- not used for training or fine tuning.)
+
+## What went well:
+
+- No issues with host machine stability!
+- Easy to get started, clone repo, pull dataset, etc.
+- Retriever (interactive) came together nicely.
+
+## What could have been better:
+
+- A few training crashes (3x OOM, 1 or 2 tokenizer problems.)
+- Performance plateaus on cosine sim and contrastive loss models.  Results are subpar in practice.  Need to investigate, but hopeful for model 38!
+- Might have spent too long hammering out the base model -- mentally splitting the difference between the engineering side and the ML practice side instead of focusing on training from the first moment.
+- Some regrets over starting with Adam instead of SGD -- may have interacted badly with some things?
+
+---
+
+Original document:
+
 # Exa ML Interview
 
 This is the starter repo for the onsite Exa ML interview! You will fork this and work on it yourself.

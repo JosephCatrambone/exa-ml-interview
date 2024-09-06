@@ -4,6 +4,7 @@ import os
 import struct
 import time
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy
 import sqlite3
@@ -23,13 +24,15 @@ class Result:
 
 
 class Retriever:
-    def __init__(self, biencoder: BaseModelMixin):
+    def __init__(self, biencoder: BaseModelMixin, filename: Optional[str] = None):
         self.model = biencoder
         self.embedding_size = biencoder.get_embedding_size()
 
         # Init vec storage:
-        #self.db = sqlite3.connect(":memory:")
-        self.db = sqlite3.connect(self.model.get_model_identifier() + ".db")
+        if filename is None:
+            self.db = sqlite3.connect(":memory:")
+        else:
+            self.db = sqlite3.connect(filename)
         self.db.row_factory = sqlite3.Row
 
         embedding_descriptor = ",".join([f"d{i} REAL" for i in range(0, self.embedding_size)])
@@ -39,6 +42,24 @@ class Retriever:
         qs = ",".join(["?"] * self.embedding_size)
         self.vector_insert_statement = f"INSERT INTO corpus_vectors(doc_id, {vector_insert_columns}) VALUES (?, {qs});"
 
+    def corpus_size(self):
+        doc_count = self.db.execute("SELECT COUNT(*) AS count FROM corpus;").fetchone()['count']
+        return doc_count
+
+    def insert_document(self, document_id: int, document_text: str, commit: bool = True):
+        start_compute = time.time()
+        doc_vec = self.model.embed_documents([document_text])[0]
+        end_compute = time.time()
+
+        start_insert = time.time()
+        self.db.execute(self.vector_insert_statement, [document_id, ] + doc_vec.tolist())
+        self.db.execute("INSERT INTO corpus (doc_id, text) VALUES (?, ?);", (document_id, document_text))
+        end_insert = time.time()
+        if commit:
+            self.db.commit()
+        return end_compute - start_compute, end_insert - start_insert
+
+
     def embed_and_store_corpus(self, corpus, return_timings: bool = False):
         """corpus_path is assumed to be a dataset (or iterable) with '_id', and 'text'.
         If return_timings is true, returns a dictionary with {'embed_times' and 'insert_times'}."""
@@ -47,18 +68,10 @@ class Retriever:
         for entry in tqdm(corpus):
             doc_id = int(entry['_id'])
             text = entry['text']
-            # TODO: Should we separate embeddings?
-            start_compute = time.time()
-            doc_vec = self.model.embed_documents([text])[0]
-            end_compute = time.time()
-
-            start_insert = time.time()
-            self.db.execute(self.vector_insert_statement, [doc_id,] + doc_vec.tolist())
-            self.db.execute("INSERT INTO corpus (doc_id, text) VALUES (?, ?);", (doc_id, text))
-            end_insert = time.time()
-
-            embed_times.append(end_compute - start_compute)
-            insert_times.append(end_insert - start_insert)
+            embed_time, insert_time = self.insert_document(doc_id, text, commit=False)  # One commit at the end.
+            embed_times.append(embed_time)
+            insert_times.append(insert_time)
+        self.db.commit()
         if return_timings:
             return {'embed_times': embed_times, 'insert_times': insert_times}
 
@@ -128,6 +141,7 @@ class RetrieverSQLiteVec:
             end_insert = time.time()
             embed_times.append(end_compute - start_compute)
             insert_times.append(end_insert - start_insert)
+        self.db.commit()
         if return_timings:
             return {'embed_times': embed_times, 'insert_times': insert_times}
 

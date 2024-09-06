@@ -39,7 +39,7 @@ class BertFinetunedBiencoder(BaseModelMixin):
         self.doc_encoder.save_pretrained(os.path.join(save_path, 'doc_encoder'))
 
     def get_model_identifier(self) -> str:
-        return "bartbasebiencoder"
+        return "bertbasebiencoder"
 
     def embed_queries(self, queries: list[str]) -> numpy.ndarray:
         return self._enc(self.query_encoder, queries).cpu().detach().numpy()
