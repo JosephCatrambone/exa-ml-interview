@@ -1,3 +1,4 @@
+import os
 from typing import Optional, Union
 
 import numpy
@@ -14,18 +15,28 @@ class BertFinetunedBiencoder(BaseModelMixin):
             self.query_encoder = torch.hub.load('huggingface/pytorch-transformers', 'model', 'bert-base-cased').to(self.device)
             self.doc_encoder = torch.hub.load('huggingface/pytorch-transformers', 'model', 'bert-base-cased').to(self.device)
         else:
-            self.tokenizer = torch.hub.load('huggingface/pytorch-transformers', 'tokenizer', saved_path)
-            self.query_encoder = torch.hub.load('huggingface/pytorch-transformers', 'model', saved_path).to(self.device)
-            self.doc_encoder = torch.hub.load('huggingface/pytorch-transformers', 'model', saved_path).to(self.device)
+            self.tokenizer = torch.hub.load('huggingface/pytorch-transformers', 'tokenizer', os.path.join(saved_path, 'tokenizer'))
+            self.query_encoder = torch.hub.load('huggingface/pytorch-transformers', 'model', os.path.join(saved_path, 'query_encoder')).to(self.device)
+            self.doc_encoder = torch.hub.load('huggingface/pytorch-transformers', 'model', os.path.join(saved_path, 'doc_encoder')).to(self.device)
             # self.tokenizer = torch.hub.load('huggingface/pytorch-transformers', 'tokenizer', local_path)  # Points to './test/bert_saved_model/', same place as was saved using `save_pretrained('./test/saved_model/')`
         self.query_encoder.eval()
         self.doc_encoder.eval()
         #self.base_size = self.base_model(**self.tokenizer("Initializing...", return_tensors="pt")).last_hidden_state.shape[-1]
         self.embedding_size = self.embed_doc(["test"]).shape[-1]
 
-    @classmethod
-    def init_new(cls):
-        pass
+    # TODO: Hoist all the set train/eval methods to the parent class.
+    def set_train_mode(self):
+        self.query_encoder.train()
+        self.doc_encoder.train()
+
+    def set_eval_mode(self):
+        self.query_encoder.eval()
+        self.doc_encoder.eval()
+
+    def save(self, save_path):
+        self.tokenizer.save_pretrained(os.path.join(save_path, 'tokenizer'))
+        self.query_encoder.save_pretrained(os.path.join(save_path, 'query_encoder'))
+        self.doc_encoder.save_pretrained(os.path.join(save_path, 'doc_encoder'))
 
     def get_model_identifier(self) -> str:
         return "bartbasebiencoder"
@@ -36,11 +47,11 @@ class BertFinetunedBiencoder(BaseModelMixin):
     def embed_doc(self, docs: list[str]) -> numpy.ndarray:
         return self._enc(self.doc_encoder, docs).cpu().detach().numpy()
 
-    def infer_training_batch(self, queries: list[str], documents: list[str], targets: list[float], loss_fn) -> torch.Tensor:
+    def infer_training_batch(self, queries: list[str], documents: list[str], targets: list[float], loss_fn) -> (torch.Tensor, torch.Tensor, torch.Tensor):
         query_embeddings = self._enc(self.query_encoder, queries)
         document_embeddings = self._enc(self.doc_encoder, documents)
         target = torch.Tensor(targets).to(self.device)
-        return loss_fn(query_embeddings, document_embeddings, target)
+        return query_embeddings, document_embeddings, loss_fn(query_embeddings, document_embeddings, target)
 
     def _enc(self, model, texts: list[str]) -> torch.Tensor:
         tokenizer_out = self.tokenizer.batch_encode_plus(texts, padding=True, return_tensors='pt').to(self.device)

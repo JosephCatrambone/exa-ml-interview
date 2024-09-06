@@ -6,7 +6,7 @@ from datasets import load_dataset, Dataset
 from torch.utils.data import Subset, DataLoader
 from tqdm import tqdm
 
-from models import BaseModelMixin, BartBase, WorstModel, CheatSentenceTransformer
+from models import BaseModelMixin
 from retriever import Retriever, Result
 
 
@@ -92,10 +92,12 @@ def run_benchmark(model: BaseModelMixin, documents: Dataset, qid_to_text: dict[i
 
 
 if __name__ == '__main__':
-    print("E2E with worst encoder.")
     print("Loading model...")
+    from models import BertFinetunedBiencoder
     #model = BartBase(device=torch.device('cuda'))
-    model = CheatSentenceTransformer()
+    #model = CheatSentenceTransformer()
+    model = BertFinetunedBiencoder(saved_path="./checkpoint/bert")
+    k = 5
 
     print("Loading data...")
     #corpus = load_dataset("mteb/msmarco", "corpus")['corpus']
@@ -114,6 +116,6 @@ if __name__ == '__main__':
     query_corpus_matches = {qc[0]: qc[1] for qc, score in query_corpus_top_match.items() if score > 0.0}
 
     print("Running benchmark...")
-    out = run_benchmark(model, corpus, query_id_to_text, query_corpus_matches, 10)
-    with open(f"results_k5_bartbase.json", 'wt') as fout:
+    out = run_benchmark(model, corpus, query_id_to_text, query_corpus_matches, k)
+    with open(f"results_k{k}_{model.get_model_identifier()}.json", 'wt') as fout:
         json.dump(asdict(out), fout, indent=2)

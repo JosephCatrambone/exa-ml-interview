@@ -27,12 +27,13 @@ class BaseModelMixin(ABC):
     def embed(self, text: list[str]) -> numpy.ndarray:
         ...
 
-    def infer_training_batch(self, queries: list[str], documents: list[str], targets: list[float], loss_fn) -> torch.Tensor:
+    def infer_training_batch(self, queries: list[str], documents: list[str], targets: list[float], loss_fn) -> (torch.Tensor, torch.Tensor, torch.Tensor):
+        """A method for performing bulk inference for training. Returns tensors for query embedings, doc embeddings, and the loss function. Can use just the loss for backprop or q/d for fun!"""
         """
         query_embeddings = self.embed_queries(queries)
         doc_embeddings = self.embed_documents(documents)
         out = self.score_match(query_embeddings, doc_embeddings)
-        return loss_fn(out, targets)
+        return query_embeddings, doc_emgeddings, loss_fn(out, targets)
         """
         raise NotImplementedError("Fine tuning not implemented for this model.")
 
