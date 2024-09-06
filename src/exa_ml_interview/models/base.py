@@ -77,7 +77,7 @@ class FunctionCallQCEmbedModel(BaseModelMixin):
         return self.embedding_size
 
     def embed(self, text: list[str]) -> numpy.ndarray:
-        return None
+        raise NotImplementedError("Use embed_queries or embed_documents.")
 
     def embed_queries(self, query: list[str]) -> numpy.ndarray:
         return self.query_embedding_fn(query)

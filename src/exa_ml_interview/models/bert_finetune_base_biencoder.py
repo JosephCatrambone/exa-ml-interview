@@ -22,7 +22,7 @@ class BertFinetunedBiencoder(BaseModelMixin):
         self.query_encoder.eval()
         self.doc_encoder.eval()
         #self.base_size = self.base_model(**self.tokenizer("Initializing...", return_tensors="pt")).last_hidden_state.shape[-1]
-        self.embedding_size = self.embed_doc(["test"]).shape[-1]
+        self.embedding_size = self.embed_documents(["test"]).shape[-1]
 
     # TODO: Hoist all the set train/eval methods to the parent class.
     def set_train_mode(self):
@@ -44,7 +44,7 @@ class BertFinetunedBiencoder(BaseModelMixin):
     def embed_queries(self, queries: list[str]) -> numpy.ndarray:
         return self._enc(self.query_encoder, queries).cpu().detach().numpy()
 
-    def embed_doc(self, docs: list[str]) -> numpy.ndarray:
+    def embed_documents(self, docs: list[str]) -> numpy.ndarray:
         return self._enc(self.doc_encoder, docs).cpu().detach().numpy()
 
     def infer_training_batch(self, queries: list[str], documents: list[str], targets: list[float], loss_fn) -> (torch.Tensor, torch.Tensor, torch.Tensor):
