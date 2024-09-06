@@ -1,0 +1,12 @@
+boto3
+hydra-core
+numpy
+omegaconf
+regex
+requests
+sacremoses
+sentencepiece
+sqlite-vec
+torch
+transformers
+tqdm

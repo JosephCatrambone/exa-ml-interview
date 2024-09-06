@@ -20,6 +20,7 @@ class Retriever:
 
     def search(query: str, k: int) -> List[Result]:
         pass
+
 ```
 
 After the interview, I will call search() on 1000 queries from the MS-Marco test set, and compute the recall@1. Your goal is to produce a system that has the highest recall@1. 
@@ -30,6 +31,10 @@ You are welcome to use any approach you want for this problem -- it will likely 
 2. You will have access to a 4 A10G's.
 3. You are welcome to used pretrained LLMs in any capacity here, but you can't start with a pretrained embedding-specific model
 4. You should only train on the [MS-Marco](https://huggingface.co/datasets/mteb/msmarco-v2/viewer/queries) train set -- or any synthetic data you generate
+
+JC Notes:
+- Latency < Top k retrieval
+- Boring to just grab a pretrained encoder; show good data science.
 
 ## Evaluation
 
@@ -43,3 +48,7 @@ In particular, I recommend getting a simple bi-encoder retriever training first,
 
 Feel free to ask questions! This is meant to be a collaborative exercise.
 
+Plan:
+- Pull dataset and look at how it fits together.
+- Get an evaluation setup running that looks at latency, recall.
+- Get a baseline running so we have some numbers to compare.
