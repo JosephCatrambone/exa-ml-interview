@@ -49,17 +49,17 @@ class EvaluationRun:
 
 def run_benchmark():
     print("Loading model...")
-    from models import BertFinetunedBiencoder
+    from models import CheatSentenceTransformer
     # model = BartBase(device=torch.device('cuda'))
-    # model = CheatSentenceTransformer()
-    model = BertFinetunedBiencoder()
+    model = CheatSentenceTransformer()
+    # model = BertFinetunedBiencoder()
     k = 5
 
     print("Loading data...")
     # corpus = load_dataset("mteb/msmarco", "corpus")['corpus']
     # queries = load_dataset("mteb/msmarco", "queries")['queries']
     # query_corpus_matches = {int(qcm['query-id']): int(qcm['corpus-id']) for qcm in load_dataset("mteb/msmarco", "default")['test']}
-    corpus = load_dataset("mteb/msmarco", "corpus", split="corpus[:1000]")
+    corpus = load_dataset("mteb/msmarco", "corpus", split="corpus[:10000]")
     corpus_ids = set()
     for c in corpus:
         corpus_ids.add(int(c['_id']))
@@ -107,7 +107,7 @@ def run_benchmark():
                 correct_item_scores.append(r.score)
             if idx == 0:
                 item_zero_score.append(r.score)
-        if found_expected_doc and score > 0.0:  # We have something which matches the desired thing
+        if found_expected_doc and score > 0.0:
             correct_recalls += 1
         elif found_expected_doc and score == 0.0:
             missed_recalls += 1

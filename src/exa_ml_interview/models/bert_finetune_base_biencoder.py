@@ -54,7 +54,7 @@ class BertFinetunedBiencoder(BaseModelMixin):
         return query_embeddings, document_embeddings, loss_fn(query_embeddings, document_embeddings, target)
 
     def _enc(self, model, texts: list[str]) -> torch.Tensor:
-        tokenizer_out = self.tokenizer.batch_encode_plus(texts, padding=True, return_tensors='pt').to(self.device)
+        tokenizer_out = self.tokenizer.batch_encode_plus(texts, padding=True, return_tensors='pt', truncation=True, max_length=512).to(self.device)
         out = model(**tokenizer_out)
         return out.last_hidden_state[:, -1, :]
 
@@ -62,4 +62,4 @@ class BertFinetunedBiencoder(BaseModelMixin):
         return self.embedding_size
 
     def embed(self, text: list[str]) -> numpy.ndarray:
-        return None
+        raise Exception("Call encode_documents or encode_queries instead.")
